@@ -1,0 +1,8 @@
+{
+  "appId": "com.srimuruganfoods.pos",
+  "appName": "Sri Murugan Foods POS",
+  "webDir": "dist",
+  "android": {
+    "backgroundColor": "#b91c1c"
+  }
+}
