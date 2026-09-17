@@ -1,0 +1,17 @@
+@import './fonts.css';
+@import './tailwind.css';
+@import './theme.css';
+
+
+/* Native Android / PWA safe-area support */
+html, body, #root {
+  min-height: 100%;
+  overscroll-behavior: none;
+}
+body {
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+button, a, input, select, textarea {
+  -webkit-tap-highlight-color: transparent;
+}

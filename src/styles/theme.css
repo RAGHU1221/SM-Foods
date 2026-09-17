@@ -1,0 +1,346 @@
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --font-size: 16px;
+  --background: #f7f4f2;
+  --foreground: #241012;
+  --card: rgba(255, 255, 255, 0.9);
+  --card-foreground: #241012;
+  --popover: #ffffff;
+  --popover-foreground: #241012;
+  --primary: #b91c1c;
+  --primary-foreground: #ffffff;
+  --secondary: #fdeeee;
+  --secondary-foreground: #8a1414;
+  --muted: #f3ece9;
+  --muted-foreground: #7a6a66;
+  --accent: #d97706;
+  --accent-foreground: #ffffff;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: rgba(185, 28, 28, 0.14);
+  --input: transparent;
+  --input-background: rgba(255,255,255,0.8);
+  --switch-background: #94a3b8;
+  --font-weight-medium: 600;
+  --font-weight-normal: 400;
+  --ring: #b91c1c;
+  --chart-1: #b91c1c;
+  --chart-2: #d97706;
+  --chart-3: #0f766e;
+  --chart-4: #10b981;
+  --chart-5: #7c3aed;
+  --radius: 1rem;
+  --success: #10b981;
+  --warning: #d97706;
+  --gold: #c9a227;
+  --grad-primary-from: #7f1414;
+  --grad-primary-to: #c0272d;
+  --sidebar: rgba(255,255,255,0.96);
+  --sidebar-foreground: #241012;
+  --sidebar-primary: #b91c1c;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fdeeee;
+  --sidebar-accent-foreground: #8a1414;
+  --sidebar-border: rgba(185, 28, 28, 0.1);
+  --sidebar-ring: #b91c1c;
+
+  /* Neumorphic soft-UI shadow pair — surfaces sit flush with the page
+     background and read as raised/pressed through light+dark shadows only. */
+  --neu-light: rgba(255, 255, 255, 0.85);
+  --neu-dark: rgba(160, 100, 92, 0.32);
+  --neu-distance: 6px;
+  --neu-blur: 12px;
+  --neu-distance-sm: 3px;
+  --neu-blur-sm: 6px;
+}
+
+.dark {
+  --background: #150a0a;
+  --foreground: #f7ece9;
+  --card: rgba(38, 16, 17, 0.88);
+  --card-foreground: #f7ece9;
+  --popover: #241012;
+  --popover-foreground: #f7ece9;
+  --primary: #ef4444;
+  --primary-foreground: #ffffff;
+  --secondary: #2a1214;
+  --secondary-foreground: #fca5a5;
+  --muted: #2a1214;
+  --muted-foreground: #a68b86;
+  --accent: #f59e0b;
+  --accent-foreground: #1a0d0d;
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  --border: rgba(239, 68, 68, 0.16);
+  --input: rgba(38, 16, 17, 0.85);
+  --input-background: rgba(38, 16, 17, 0.85);
+  --switch-background: #4b2a2c;
+  --ring: #ef4444;
+  --font-weight-medium: 600;
+  --font-weight-normal: 400;
+  --success: #34d399;
+  --warning: #fbbf24;
+  --gold: #e0bb4a;
+  --grad-primary-from: #4a0d0d;
+  --grad-primary-to: #dc2626;
+  --chart-1: #ef4444;
+  --chart-2: #f59e0b;
+  --chart-3: #2dd4bf;
+  --chart-4: #34d399;
+  --chart-5: #a78bfa;
+  --sidebar: rgba(26, 12, 13, 0.97);
+  --sidebar-foreground: #f7ece9;
+  --sidebar-primary: #ef4444;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #2a1214;
+  --sidebar-accent-foreground: #fca5a5;
+  --sidebar-border: rgba(239, 68, 68, 0.14);
+  --sidebar-ring: #ef4444;
+
+  --neu-light: rgba(255, 255, 255, 0.05);
+  --neu-dark: rgba(0, 0, 0, 0.65);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-input-background: var(--input-background);
+  --color-switch-background: var(--switch-background);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /**
+  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
+  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
+  */
+
+  html {
+    font-size: var(--font-size);
+  }
+
+  h1 {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h2 {
+    font-size: var(--text-xl);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h3 {
+    font-size: var(--text-lg);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  h4 {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  label {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  button {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-medium);
+    line-height: 1.5;
+  }
+
+  input {
+    font-size: var(--text-base);
+    font-weight: var(--font-weight-normal);
+    line-height: 1.5;
+  }
+
+  @media print {
+    body * { visibility: hidden; }
+    #print-area, #print-area * { visibility: visible; }
+    #print-area { position: absolute; left: 0; top: 0; width: 100%; }
+  }
+}
+
+/* ─── Neumorphism ───────────────────────────────────────────────────────────
+   Surfaces are the same color as the page (no border, no floating white
+   card) and get their depth purely from a light+dark shadow pair. Raised =
+   default resting state. Pressed = inset, used for the active/selected
+   state (bottom-nav tab, toggled button, focused input). */
+.neu {
+  background: var(--background);
+  border: none;
+  box-shadow:
+    calc(var(--neu-distance) * -1) calc(var(--neu-distance) * -1) var(--neu-blur) var(--neu-light),
+    var(--neu-distance) var(--neu-distance) var(--neu-blur) var(--neu-dark);
+}
+.neu-sm {
+  background: var(--background);
+  border: none;
+  box-shadow:
+    calc(var(--neu-distance-sm) * -1) calc(var(--neu-distance-sm) * -1) var(--neu-blur-sm) var(--neu-light),
+    var(--neu-distance-sm) var(--neu-distance-sm) var(--neu-blur-sm) var(--neu-dark);
+}
+.neu-pressed {
+  background: var(--background);
+  border: none;
+  box-shadow:
+    inset calc(var(--neu-distance) * -1) calc(var(--neu-distance) * -1) var(--neu-blur) var(--neu-light),
+    inset var(--neu-distance) var(--neu-distance) var(--neu-blur) var(--neu-dark);
+}
+.neu-pressed-sm {
+  background: var(--background);
+  border: none;
+  box-shadow:
+    inset calc(var(--neu-distance-sm) * -1) calc(var(--neu-distance-sm) * -1) var(--neu-blur-sm) var(--neu-light),
+    inset var(--neu-distance-sm) var(--neu-distance-sm) var(--neu-blur-sm) var(--neu-dark);
+}
+.neu-circle { border-radius: 9999px; }
+
+/* ─── Magic bump bottom navigation ──────────────────────────────────────
+   Ported from the classic "Magic Navigation Menu" bump-nav pattern: the
+   active icon pops up out of the bar and turns its own color; a disc the
+   same color as the page slides underneath it, with two small circles
+   (drawn via box-shadow, not a background) filling in the join so the
+   disc reads as a smooth continuation of the bar instead of a separate
+   floating blob. */
+.magic-nav {
+  background: var(--background);
+  /* position is NOT set here — the "fixed bottom-0 left-0 right-0" Tailwind
+     classes on the <nav> element control that. (A plain `.magic-nav { position:
+     relative }` rule here would win the cascade over the `.fixed` utility —
+     same specificity, defined later — and silently turn the bar back into a
+     normal in-flow block the height of the whole page. That was the actual
+     bug: the bar never showed pinned to the bottom.) */
+}
+.magic-nav-item-btn {
+  position: relative;
+  z-index: 2;
+  background: none;
+  border: none;
+}
+.magic-nav-icon {
+  position: relative;
+  width: 46px;
+  height: 46px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted-foreground);
+  background: var(--background);
+  transition: transform 0.45s, background 0.45s, color 0.45s, box-shadow 0.45s;
+  transition-delay: 0s;
+}
+.magic-nav-item-btn.active .magic-nav-icon {
+  background: var(--tab-clr);
+  color: #fff;
+  transform: translateY(-23px);
+  box-shadow: 0 8px 18px color-mix(in srgb, var(--tab-clr) 45%, transparent);
+  transition-delay: 0.22s;
+}
+.magic-nav-icon::before {
+  content: "";
+  position: absolute;
+  inset: -3px;
+  border-radius: 9999px;
+  background: var(--tab-clr);
+  filter: blur(7px);
+  opacity: 0;
+  z-index: -1;
+  transition: opacity 0.45s;
+  transition-delay: 0.1s;
+}
+.magic-nav-item-btn.active .magic-nav-icon::before {
+  opacity: 0.5;
+  transition-delay: 0.22s;
+}
+.magic-nav-label {
+  font-size: 10px;
+  font-weight: 700;
+  transition: color 0.3s;
+}
+.magic-nav-indicator {
+  position: absolute;
+  top: -19px;
+  height: 52px;
+  border-radius: 9999px;
+  background: var(--background);
+  z-index: 1;
+  transition: transform 0.45s;
+  pointer-events: none;
+}
+.magic-nav-indicator::before,
+.magic-nav-indicator::after {
+  content: "";
+  position: absolute;
+  top: 18px;
+  width: 20px;
+  height: 20px;
+  border-radius: 9999px;
+  background: transparent;
+}
+.magic-nav-indicator::before { left: -18px; box-shadow: 10px 12px var(--background); }
+.magic-nav-indicator::after  { right: -18px; box-shadow: -10px 12px var(--background); }
+
+/* Reserve room under scrollable content so it never sits hidden behind the
+   fixed bump nav — and account for the phone's gesture-bar / home-indicator
+   area (env(safe-area-inset-bottom), only non-zero once index.html declares
+   viewport-fit=cover, which it now does). Not needed on desktop, where the
+   sidebar is used instead of the bottom nav. */
+.app-main-pad {
+  padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px));
+}
+@media (min-width: 768px) {
+  .app-main-pad {
+    padding-bottom: 0;
+  }
+}
