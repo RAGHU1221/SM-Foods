@@ -1,12 +1,44 @@
 import React, { useState } from "react";
-import { CheckCircle, Printer, FileText, Download, MessageCircle, Share2, X, Globe } from "lucide-react";
+import { CheckCircle, Printer, FileText, Download, MessageCircle, Share2, X, Globe, Loader2 } from "lucide-react";
 import { GlassCard, PrimaryButton } from "../components/shared";
 import { fmt } from "../data";
+import { generateBillPdf, downloadBillPdf, printBillPdf, shareBillPdf } from "../lib/pdf";
 import type { Bill, Lang, Screen } from "../types";
 
 export function BillPreviewScreen({ bill, navigate, t }: { bill: Bill | null; navigate: (s: Screen) => void; t: (k: string) => string }) {
   const [invoiceLang, setInvoiceLang] = useState<Lang>("en");
+  const [busy, setBusy] = useState<string | null>(null);
   const isTa = invoiceLang === "ta";
+
+  const pdfFilename = () => `Bill-${bill?.billNo ?? "SMF"}.pdf`;
+
+  const withBusy = (key: string, fn: () => Promise<void>) => async () => {
+    if (busy) return;
+    setBusy(key);
+    try {
+      await fn();
+    } catch (err) {
+      console.error(err);
+      alert(isTa ? "தோல்வி — மீண்டும் முயற்சிக்கவும்." : "Something went wrong — please try again.");
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  const handlePrint = (format: "thermal" | "a4") => withBusy(format, async () => {
+    const blob = await generateBillPdf("print-area", format);
+    await printBillPdf(blob, pdfFilename());
+  });
+
+  const handleDownload = withBusy("download", async () => {
+    const blob = await generateBillPdf("print-area", "a4");
+    await downloadBillPdf(blob, pdfFilename());
+  });
+
+  const handleShare = (label: string) => withBusy(label, async () => {
+    const blob = await generateBillPdf("print-area", "a4");
+    await shareBillPdf(blob, pdfFilename(), `${bill?.billNo ?? ""} · ${fmt(bill?.total ?? 0)} — Sri Murugan Foods`);
+  });
 
   if (!bill) {
     return (
@@ -82,13 +114,23 @@ export function BillPreviewScreen({ bill, navigate, t }: { bill: Bill | null; na
       </div>
 
       <div className="w-full max-w-md grid grid-cols-2 gap-2 mt-4">
-        <PrimaryButton variant="outline" onClick={() => window.print()}><Printer size={15} /> {t("printThermal")}</PrimaryButton>
-        <PrimaryButton variant="outline" onClick={() => window.print()}><FileText size={15} /> {t("printA4")}</PrimaryButton>
-        <PrimaryButton variant="outline" onClick={() => alert(isTa ? "PDF பதிவிறக்கம் தொடங்கியது" : "PDF download started")}><Download size={15} /> {t("downloadPdf")}</PrimaryButton>
-        <PrimaryButton variant="outline" onClick={() => alert(isTa ? "வாட்ஸ்அப் வழியாக அனுப்பப்பட்டது" : "Sent via WhatsApp")}><MessageCircle size={15} /> WhatsApp</PrimaryButton>
+        <PrimaryButton variant="outline" disabled={!!busy} onClick={handlePrint("thermal")}>
+          {busy === "thermal" ? <Loader2 size={15} className="animate-spin" /> : <Printer size={15} />} {t("printThermal")}
+        </PrimaryButton>
+        <PrimaryButton variant="outline" disabled={!!busy} onClick={handlePrint("a4")}>
+          {busy === "a4" ? <Loader2 size={15} className="animate-spin" /> : <FileText size={15} />} {t("printA4")}
+        </PrimaryButton>
+        <PrimaryButton variant="outline" disabled={!!busy} onClick={handleDownload}>
+          {busy === "download" ? <Loader2 size={15} className="animate-spin" /> : <Download size={15} />} {t("downloadPdf")}
+        </PrimaryButton>
+        <PrimaryButton variant="outline" disabled={!!busy} onClick={handleShare("whatsapp")}>
+          {busy === "whatsapp" ? <Loader2 size={15} className="animate-spin" /> : <MessageCircle size={15} />} WhatsApp
+        </PrimaryButton>
       </div>
       <div className="w-full max-w-md grid grid-cols-2 gap-2 mt-2">
-        <PrimaryButton variant="ghost" onClick={() => alert(isTa ? "பகிரப்பட்டது" : "Shared")}><Share2 size={15} /> {t("share")}</PrimaryButton>
+        <PrimaryButton variant="ghost" disabled={!!busy} onClick={handleShare("share")}>
+          {busy === "share" ? <Loader2 size={15} className="animate-spin" /> : <Share2 size={15} />} {t("share")}
+        </PrimaryButton>
         <PrimaryButton onClick={() => navigate("dashboard")}><X size={15} /> {t("close")}</PrimaryButton>
       </div>
     </div>
