@@ -89,15 +89,15 @@ export function BillingScreen({ cart, setCart, navigate, t, lang, onSaveBill, he
   const cartItemCount = cart.reduce((a, c) => a + c.qty, 0);
 
   const CartPanel = (
-    <div className="flex flex-col h-full">
-      <div className="px-5 pt-5 pb-2 flex items-center justify-between">
+    <div className="flex flex-col h-full min-h-0">
+      <div className="px-5 pt-5 pb-2 flex items-center justify-between flex-shrink-0">
         <h3 className="font-bold text-sm" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>{t("cart")} ({cartItemCount})</h3>
         <button className="md:hidden w-8 h-8 rounded-xl flex items-center justify-center" style={{ background: "var(--muted)" }} onClick={() => setMobileCartOpen(false)}><X size={14} /></button>
       </div>
       {cart.length === 0 ? (
         <EmptyState icon={ShoppingCart} title={t("cartEmpty")} />
       ) : (
-        <div className="flex-1 overflow-y-auto px-5 flex flex-col gap-2 pb-2">
+        <div className="flex-1 min-h-0 overflow-y-auto px-5 flex flex-col gap-2 pb-2">
           {cart.map(c => (
             <div key={c.product.id} className="flex items-center gap-2.5 py-2 border-b" style={{ borderColor: "var(--border)" }}>
               <ProductThumb id={c.product.id} className="w-11 h-11 rounded-xl" />
@@ -116,7 +116,7 @@ export function BillingScreen({ cart, setCart, navigate, t, lang, onSaveBill, he
         </div>
       )}
 
-      <div className="px-5 py-4 flex flex-col gap-3 border-t" style={{ borderColor: "var(--border)" }}>
+      <div className="px-5 py-4 flex flex-col gap-3 border-t flex-shrink-0" style={{ borderColor: "var(--border)" }}>
         <SelectInput value={customerId} onChange={e => setCustomerId(e.target.value)}>
           <option value="">{t("walkInCustomer")}</option>
           {CUSTOMERS.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -223,7 +223,7 @@ export function BillingScreen({ cart, setCart, navigate, t, lang, onSaveBill, he
       {/* Mobile cart drawer */}
       {mobileCartOpen && (
         <div className="md:hidden fixed inset-0 z-[80]" style={{ background: "rgba(0,0,0,0.5)" }} onClick={() => setMobileCartOpen(false)}>
-          <div onClick={e => e.stopPropagation()} className="absolute bottom-0 left-0 right-0 rounded-t-3xl max-h-[85vh] flex flex-col" style={{ background: "var(--background)" }}>
+          <div onClick={e => e.stopPropagation()} className="absolute bottom-0 left-0 right-0 rounded-t-3xl max-h-[85vh] flex flex-col overflow-hidden" style={{ background: "var(--background)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
             {CartPanel}
           </div>
         </div>
