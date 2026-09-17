@@ -204,7 +204,10 @@ export function BillingScreen({ cart, setCart, navigate, t, lang, onSaveBill, he
         </div>
 
         {cart.length > 0 && (
-          <div className="md:hidden fixed bottom-20 left-0 right-0 px-4 z-40">
+          <div
+            className="md:hidden fixed left-0 right-0 px-4 z-50"
+            style={{ bottom: "calc(96px + env(safe-area-inset-bottom, 0px))" }}
+          >
             <button onClick={() => setMobileCartOpen(true)} className="w-full py-3.5 rounded-2xl font-bold text-white text-sm flex items-center justify-center gap-2 shadow-xl" style={{ background: "linear-gradient(135deg, var(--grad-primary-from), var(--grad-primary-to))" }}>
               <ShoppingCart size={17} /> {t("cart")} · {cartItemCount} · {fmt(total)}
             </button>
