@@ -11,8 +11,8 @@ import { ReportsScreen, DeletedBillsScreen } from "./screens/reports";
 import { PrinterScreen, SettingsScreen, BackupScreen } from "./screens/admin";
 import { makeT } from "./i18n";
 import { usePersistentState, useOnlineStatus } from "./storage";
-import { PRODUCTS, CUSTOMERS, BILLS, NOTIFICATIONS, HELD_BILLS, LEDGER, DELETED_BILLS, DEFAULT_SETTINGS, DEFAULT_PRINTER_SETTINGS, fmt } from "./data";
-import type { Screen, Lang, CartItem, HeldBill, Bill, AppNotification, Product, Customer, LedgerEntry, DeletedBill, BusinessSettings, PrinterSettings, SearchResult } from "./types";
+import { PRODUCTS, CUSTOMERS, BILLS, NOTIFICATIONS, HELD_BILLS, LEDGER, DELETED_BILLS, DEFAULT_SETTINGS, DEFAULT_PRINTER_SETTINGS, ITEM_TYPES, fmt } from "./data";
+import type { Screen, Lang, CartItem, HeldBill, Bill, AppNotification, Product, Customer, LedgerEntry, DeletedBill, BusinessSettings, PrinterSettings, SearchResult, ItemType } from "./types";
 import { WifiOff } from "lucide-react";
 
 const TITLE_KEY: Record<Screen, string> = {
@@ -44,6 +44,7 @@ export default function App() {
   // Management survive offline restarts and stay in sync everywhere the
   // catalog is used (search, dashboard stats, billing screens).
   const [products, setProducts] = usePersistentState<Product[]>("products", PRODUCTS);
+  const [itemTypes, setItemTypes] = usePersistentState<ItemType[]>("itemTypes", ITEM_TYPES);
   const [editingProductId, setEditingProductId] = useState<string | null>(null);
   // Same for customers, their ledger, deleted bills, and business/printer
   // settings — every screen that lets you add/edit/delete something now
@@ -115,9 +116,9 @@ export default function App() {
       case "wholesale": return <WholesaleBillingScreen cart={cart} setCart={setCart} navigate={navigate} t={t} lang={lang} onSaveBill={onSaveBill} heldBills={heldBills} setHeldBills={setHeldBills} products={products} />;
       case "receipt": return <BillPreviewScreen bill={lastBill} navigate={navigate} t={t} />;
       case "holdbills": return <HoldBillsScreen heldBills={heldBills} setHeldBills={setHeldBills} setCart={setCart} navigate={navigate} t={t} />;
-      case "items": return <ItemsScreen navigate={navigate} t={t} lang={lang} products={products} setProducts={setProducts} onAdd={startAddItem} onEdit={startEditItem} />;
-      case "itemform": return <ItemFormScreen navigate={navigate} t={t} lang={lang} products={products} setProducts={setProducts} editingProductId={editingProductId} />;
-      case "itemtypes": return <ItemTypesScreen t={t} lang={lang} />;
+      case "items": return <ItemsScreen navigate={navigate} t={t} lang={lang} products={products} setProducts={setProducts} itemTypes={itemTypes} onAdd={startAddItem} onEdit={startEditItem} />;
+      case "itemform": return <ItemFormScreen navigate={navigate} t={t} lang={lang} products={products} setProducts={setProducts} itemTypes={itemTypes} editingProductId={editingProductId} />;
+      case "itemtypes": return <ItemTypesScreen t={t} lang={lang} itemTypes={itemTypes} setItemTypes={setItemTypes} />;
       case "customers": return <CustomersScreen navigate={navigate} t={t} customers={customers} setCustomers={setCustomers} setLedgerCustomer={setLedgerCustomer} onAdd={startAddCustomer} onEdit={startEditCustomer} />;
       case "customerform": return <CustomerFormScreen navigate={navigate} t={t} customers={customers} setCustomers={setCustomers} editingCustomerId={editingCustomerId} />;
       case "ledger": return <CustomerLedgerScreen customerId={ledgerCustomer} t={t} customers={customers} ledgerEntries={ledgerEntries} />;
