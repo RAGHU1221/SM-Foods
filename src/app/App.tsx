@@ -6,13 +6,13 @@ import { DashboardScreen } from "./screens/dashboard";
 import { BillingScreen, WholesaleBillingScreen, HoldBillsScreen } from "./screens/billing";
 import { BillPreviewScreen } from "./screens/receipt";
 import { ItemsScreen, ItemFormScreen, ItemTypesScreen } from "./screens/items";
-import { CustomersScreen, CustomerLedgerScreen, OutstandingScreen, ReceivePaymentScreen } from "./screens/customers";
+import { CustomersScreen, CustomerFormScreen, CustomerLedgerScreen, OutstandingScreen, ReceivePaymentScreen } from "./screens/customers";
 import { ReportsScreen, DeletedBillsScreen } from "./screens/reports";
 import { PrinterScreen, SettingsScreen, BackupScreen } from "./screens/admin";
 import { makeT } from "./i18n";
 import { usePersistentState, useOnlineStatus } from "./storage";
-import { PRODUCTS, CUSTOMERS, BILLS, NOTIFICATIONS, HELD_BILLS, fmt } from "./data";
-import type { Screen, Lang, CartItem, HeldBill, Bill, AppNotification } from "./types";
+import { PRODUCTS, CUSTOMERS, BILLS, NOTIFICATIONS, HELD_BILLS, LEDGER, DELETED_BILLS, DEFAULT_SETTINGS, DEFAULT_PRINTER_SETTINGS, fmt } from "./data";
+import type { Screen, Lang, CartItem, HeldBill, Bill, AppNotification, Product, Customer, LedgerEntry, DeletedBill, BusinessSettings, PrinterSettings, SearchResult } from "./types";
 import { WifiOff } from "lucide-react";
 
 const TITLE_KEY: Record<Screen, string> = {
@@ -40,6 +40,20 @@ export default function App() {
   const [bills, setBills] = usePersistentState<Bill[]>("bills", BILLS);
   const [lastBill, setLastBill] = usePersistentState<Bill | null>("lastBill", null);
   const [notifications, setNotifications] = usePersistentState<AppNotification[]>("notifications", NOTIFICATIONS);
+  // Products are persisted too, so items added/edited/deleted in Items
+  // Management survive offline restarts and stay in sync everywhere the
+  // catalog is used (search, dashboard stats, billing screens).
+  const [products, setProducts] = usePersistentState<Product[]>("products", PRODUCTS);
+  const [editingProductId, setEditingProductId] = useState<string | null>(null);
+  // Same for customers, their ledger, deleted bills, and business/printer
+  // settings — every screen that lets you add/edit/delete something now
+  // reads from and writes to one of these instead of a static demo array.
+  const [customers, setCustomers] = usePersistentState<Customer[]>("customers", CUSTOMERS);
+  const [ledgerEntries, setLedgerEntries] = usePersistentState<LedgerEntry[]>("ledger", LEDGER);
+  const [deletedBills, setDeletedBills] = usePersistentState<DeletedBill[]>("deletedBills", DELETED_BILLS);
+  const [settings, setSettings] = usePersistentState<BusinessSettings>("settings", DEFAULT_SETTINGS);
+  const [printerSettings, setPrinterSettings] = usePersistentState<PrinterSettings>("printerSettings", DEFAULT_PRINTER_SETTINGS);
+  const [editingCustomerId, setEditingCustomerId] = useState<string | null>(null);
 
   const [ledgerCustomer, setLedgerCustomer] = useState<string | null>(CUSTOMERS[0].id);
   const [receiveCustomer, setReceiveCustomer] = useState<string | null>(null);
@@ -60,47 +74,61 @@ export default function App() {
     setBills(prev => [bill, ...prev]);
   };
   const markAllRead = () => setNotifications(notifications.map(n => ({ ...n, read: true })));
+  const markOneRead = (id: string) => setNotifications(notifications.map(n => n.id === id ? { ...n, read: true } : n));
   const handleLogin = () => { setAuthed(true); navigate("dashboard"); };
   const handleLogout = () => { setAuthed(false); navigate("login"); };
+  const startAddItem = () => { setEditingProductId(null); navigate("itemform"); };
+  const startEditItem = (id: string) => { setEditingProductId(id); navigate("itemform"); };
+  const startAddCustomer = () => { setEditingCustomerId(null); navigate("customerform"); };
+  const startEditCustomer = (id: string) => { setEditingCustomerId(id); navigate("customerform"); };
 
-  const searchResults = useMemo(() => {
+  const searchResults = useMemo<SearchResult[]>(() => {
     if (!searchQuery.trim()) return [];
     const q = searchQuery.toLowerCase();
-    const items = PRODUCTS.filter(p => p.nameEn.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)).slice(0, 4).map(p => ({ label: p.nameEn, sub: `${p.sku} · ${fmt(p.price)}`, kind: "item" }));
-    const custs = CUSTOMERS.filter(c => c.name.toLowerCase().includes(q) || c.mobile.includes(q)).slice(0, 4).map(c => ({ label: c.name, sub: c.mobile, kind: "customer" }));
-    const billMatches = bills.filter(b => b.billNo.toLowerCase().includes(q) || b.customerName.toLowerCase().includes(q)).slice(0, 4).map(b => ({ label: b.billNo, sub: `${b.customerName} · ${fmt(b.total)}`, kind: "bill" }));
+    const items = products.filter(p => p.nameEn.toLowerCase().includes(q) || p.sku.toLowerCase().includes(q)).slice(0, 4).map(p => ({ id: p.id, label: p.nameEn, sub: `${p.sku} · ${fmt(p.price)}`, kind: "item" as const }));
+    const custs = customers.filter(c => c.name.toLowerCase().includes(q) || c.mobile.includes(q)).slice(0, 4).map(c => ({ id: c.id, label: c.name, sub: c.mobile, kind: "customer" as const }));
+    const billMatches = bills.filter(b => b.billNo.toLowerCase().includes(q) || b.customerName.toLowerCase().includes(q)).slice(0, 4).map(b => ({ id: b.id, label: b.billNo, sub: `${b.customerName} · ${fmt(b.total)}`, kind: "bill" as const }));
     return [...items, ...custs, ...billMatches];
-  }, [searchQuery, bills]);
+  }, [searchQuery, bills, products, customers]);
+
+  const handleSearchSelect = (r: SearchResult) => {
+    setSearchOpen(false);
+    setSearchQuery("");
+    if (r.kind === "item") navigate("items");
+    else if (r.kind === "customer") { setLedgerCustomer(r.id); navigate("ledger"); }
+    else navigate("reports");
+  };
 
   if (screen === "splash") {
     return <div className={dark ? "dark" : ""}><div className="h-screen w-screen" style={{ background: "var(--background)" }}><SplashScreen onDone={() => navigate(authed ? "dashboard" : "login")} t={t} /></div></div>;
   }
   if (screen === "login") {
-    return <div className={dark ? "dark" : ""}><div className="h-screen w-screen overflow-y-auto" style={{ background: "var(--background)" }}><LoginScreen onLogin={handleLogin} t={t} /></div></div>;
+    return <div className={dark ? "dark" : ""}><div className="h-screen w-screen overflow-y-auto" style={{ background: "var(--background)" }}><LoginScreen onLogin={handleLogin} t={t} lang={lang} /></div></div>;
   }
 
   const title = t(TITLE_KEY[screen] || "dashboard");
 
   const renderScreen = () => {
     switch (screen) {
-      case "dashboard": return <DashboardScreen dark={dark} navigate={navigate} t={t} lang={lang} bills={bills} />;
-      case "billing": return <BillingScreen cart={cart} setCart={setCart} navigate={navigate} t={t} lang={lang} onSaveBill={onSaveBill} heldBills={heldBills} setHeldBills={setHeldBills} />;
-      case "wholesale": return <WholesaleBillingScreen cart={cart} setCart={setCart} navigate={navigate} t={t} lang={lang} onSaveBill={onSaveBill} heldBills={heldBills} setHeldBills={setHeldBills} />;
+      case "dashboard": return <DashboardScreen dark={dark} navigate={navigate} t={t} lang={lang} bills={bills} products={products} />;
+      case "billing": return <BillingScreen cart={cart} setCart={setCart} navigate={navigate} t={t} lang={lang} onSaveBill={onSaveBill} heldBills={heldBills} setHeldBills={setHeldBills} products={products} />;
+      case "wholesale": return <WholesaleBillingScreen cart={cart} setCart={setCart} navigate={navigate} t={t} lang={lang} onSaveBill={onSaveBill} heldBills={heldBills} setHeldBills={setHeldBills} products={products} />;
       case "receipt": return <BillPreviewScreen bill={lastBill} navigate={navigate} t={t} />;
       case "holdbills": return <HoldBillsScreen heldBills={heldBills} setHeldBills={setHeldBills} setCart={setCart} navigate={navigate} t={t} />;
-      case "items": return <ItemsScreen navigate={navigate} t={t} lang={lang} />;
-      case "itemform": return <ItemFormScreen navigate={navigate} t={t} />;
+      case "items": return <ItemsScreen navigate={navigate} t={t} lang={lang} products={products} setProducts={setProducts} onAdd={startAddItem} onEdit={startEditItem} />;
+      case "itemform": return <ItemFormScreen navigate={navigate} t={t} lang={lang} products={products} setProducts={setProducts} editingProductId={editingProductId} />;
       case "itemtypes": return <ItemTypesScreen t={t} lang={lang} />;
-      case "customers": return <CustomersScreen navigate={navigate} t={t} setLedgerCustomer={setLedgerCustomer} />;
-      case "ledger": return <CustomerLedgerScreen customerId={ledgerCustomer} t={t} />;
-      case "outstanding": return <OutstandingScreen navigate={navigate} t={t} setReceiveCustomer={setReceiveCustomer} />;
-      case "receivepayment": return <ReceivePaymentScreen customerId={receiveCustomer} navigate={navigate} t={t} />;
+      case "customers": return <CustomersScreen navigate={navigate} t={t} customers={customers} setCustomers={setCustomers} setLedgerCustomer={setLedgerCustomer} onAdd={startAddCustomer} onEdit={startEditCustomer} />;
+      case "customerform": return <CustomerFormScreen navigate={navigate} t={t} customers={customers} setCustomers={setCustomers} editingCustomerId={editingCustomerId} />;
+      case "ledger": return <CustomerLedgerScreen customerId={ledgerCustomer} t={t} customers={customers} ledgerEntries={ledgerEntries} />;
+      case "outstanding": return <OutstandingScreen navigate={navigate} t={t} customers={customers} setReceiveCustomer={setReceiveCustomer} />;
+      case "receivepayment": return <ReceivePaymentScreen customerId={receiveCustomer} navigate={navigate} t={t} customers={customers} setCustomers={setCustomers} ledgerEntries={ledgerEntries} setLedgerEntries={setLedgerEntries} />;
       case "reports": return <ReportsScreen t={t} />;
-      case "deletedbills": return <DeletedBillsScreen t={t} />;
-      case "printer": return <PrinterScreen t={t} />;
-      case "settings": return <SettingsScreen dark={dark} setDark={setDark} lang={lang} setLang={setLang} t={t} />;
+      case "deletedbills": return <DeletedBillsScreen t={t} deletedBills={deletedBills} setDeletedBills={setDeletedBills} setBills={setBills} />;
+      case "printer": return <PrinterScreen t={t} printerSettings={printerSettings} setPrinterSettings={setPrinterSettings} />;
+      case "settings": return <SettingsScreen dark={dark} setDark={setDark} lang={lang} setLang={setLang} t={t} settings={settings} setSettings={setSettings} />;
       case "backup": return <BackupScreen t={t} />;
-      default: return <DashboardScreen dark={dark} navigate={navigate} t={t} lang={lang} bills={bills} />;
+      default: return <DashboardScreen dark={dark} navigate={navigate} t={t} lang={lang} bills={bills} products={products} />;
     }
   };
 
@@ -125,8 +153,8 @@ export default function App() {
 
         <BottomNav screen={screen} navigate={navigate} onMenu={() => setMenuOpen(true)} />
         <MobileMenuSheet open={menuOpen} onClose={() => setMenuOpen(false)} screen={screen} navigate={navigate} lang={lang} setLang={setLang} onLogout={handleLogout} t={t} />
-        <NotificationsPanel open={notifOpen} onClose={() => setNotifOpen(false)} notifications={notifications} lang={lang} markAllRead={markAllRead} t={t} />
-        <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} query={searchQuery} setQuery={setSearchQuery} results={searchResults} t={t} />
+        <NotificationsPanel open={notifOpen} onClose={() => setNotifOpen(false)} notifications={notifications} lang={lang} markAllRead={markAllRead} markOneRead={markOneRead} t={t} />
+        <SearchModal open={searchOpen} onClose={() => setSearchOpen(false)} query={searchQuery} setQuery={setSearchQuery} results={searchResults} onSelect={handleSearchSelect} t={t} />
       </div>
     </div>
   );

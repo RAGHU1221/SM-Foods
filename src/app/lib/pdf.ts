@@ -18,6 +18,7 @@
 import { Capacitor } from "@capacitor/core";
 import { Filesystem, Directory } from "@capacitor/filesystem";
 import { Share } from "@capacitor/share";
+import { Printer } from "@capgo/capacitor-printer";
 import jsPDF from "jspdf";
 import html2canvas from "html2canvas";
 
@@ -144,21 +145,37 @@ export async function shareBillPdf(blob: Blob, filename: string, text?: string):
 }
 
 /**
- * Prints the bill. Native: same as share (Android's share sheet surfaces a
- * built-in "Print" target for PDFs — there is no separate print API
- * exposed to a Capacitor WebView, so routing through Share is the standard
- * way apps trigger real Android printing). Web: opens the generated PDF in
- * a new tab and calls the browser's print dialog on it directly.
+ * Prints the bill directly — this goes straight to the OS print dialog,
+ * never a share/open sheet.
+ *
+ * Packaged Android app: @capgo/capacitor-printer's printBase64 calls
+ * Android's real PrintManager/PrintHelper API directly — the same system
+ * print dialog you'd get from Chrome or Gmail. This is what fixes "print
+ * options go to share" — there is no app-picker step at all.
+ *
+ * Browser / PWA: deliberately NOT routed through the same plugin call —
+ * its web fallback prints via a hidden iframe and has a real bug (an
+ * unguarded DOM removal inside a setTimeout that can throw and leave the
+ * print promise hanging forever on some browsers' PDF viewers). Opening the
+ * PDF in a new tab and calling the browser's own print() on it is simpler
+ * and was verified to work reliably.
  */
 export async function printBillPdf(blob: Blob, filename: string): Promise<void> {
   if (Capacitor.isNativePlatform()) {
-    await shareBillPdf(blob, filename);
-    return;
+    const base64 = await blobToBase64(blob);
+    try {
+      await Printer.printBase64({ data: base64, mimeType: "application/pdf", name: filename });
+      return;
+    } catch (err) {
+      console.error("Native print failed, falling back to share:", err);
+      await shareBillPdf(blob, filename);
+      return;
+    }
   }
+
   const url = URL.createObjectURL(blob);
   const win = window.open(url, "_blank");
   if (!win) {
-    // Pop-up blocked — fall back to a normal download so the user still gets the file.
     downloadBlobInBrowser(blob, filename);
     return;
   }

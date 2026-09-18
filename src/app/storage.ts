@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 
-const PREFIX = "smf-pos:";
+export const STORAGE_PREFIX = "smf-pos:";
+const PREFIX = STORAGE_PREFIX;
 
 function readLocal<T>(key: string, fallback: T): T {
   try {
@@ -30,10 +31,13 @@ export function usePersistentState<T>(key: string, initial: T | (() => T)) {
     const fallback = typeof initial === "function" ? (initial as () => T)() : initial;
     return readLocal<T>(key, fallback);
   });
-  const first = useRef(true);
 
+  // Write on every mount too (not just after a change) so a brand-new
+  // install's default data (products, settings, customers, etc.) actually
+  // exists under its localStorage key right away — otherwise "Download
+  // Backup" on a fresh install would silently skip anything the user
+  // hasn't personally edited yet, even though it's clearly showing on screen.
   useEffect(() => {
-    if (first.current) { first.current = false; return; }
     writeLocal(key, value);
   }, [key, value]);
 

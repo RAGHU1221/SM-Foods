@@ -1,4 +1,4 @@
-import type { ItemType, Product, Customer, LedgerEntry, Bill, DeletedBill, HeldBill, AppNotification } from "./types";
+import type { ItemType, Product, Customer, LedgerEntry, Bill, DeletedBill, HeldBill, AppNotification, BusinessSettings, PrinterSettings } from "./types";
 
 const img = (seed: string) => `https://images.unsplash.com/${seed}?w=160&h=160&fit=crop&auto=format`;
 
@@ -111,6 +111,30 @@ export const TOP_ITEMS = [
   { name: "Groundnuts", units: 240 },
   { name: "Pure Ghee (500ml)", units: 198 },
 ];
+
+export const DEFAULT_SETTINGS: BusinessSettings = {
+  businessName: "Sri Murugan Foods",
+  phone: "+91 98421 55667",
+  address: "No.24, Market Street, Salem - 636001",
+  gstNumber: "33SMFPQ1234K1Z8",
+  invoiceFooter: "Thank you! Visit again.",
+  logo: "",
+  gstEnabledDefault: true,
+  defaultPayment: "cash",
+  invoicePrefix: "SMF-",
+  invoiceNumber: 1103,
+  decimals: 2,
+};
+
+export const DEFAULT_PRINTER_SETTINGS: PrinterSettings = {
+  thermalConnected: true,
+  a4Connected: false,
+  autoPrint: true,
+  thermalName: "EPSON TM-T82 (Bluetooth)",
+  a4Name: "HP LaserJet M126 (Network)",
+  paperWidth: "58mm",
+  copies: 1,
+};
 
 export const fmt = (n: number) => `₹${n.toLocaleString("en-IN")}`;
 export const fmtK = (n: number) => n >= 100000 ? `₹${(n / 100000).toFixed(1)}L` : n >= 1000 ? `₹${(n / 1000).toFixed(1)}K` : `₹${n}`;

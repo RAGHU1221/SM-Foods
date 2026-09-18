@@ -113,3 +113,34 @@ export interface AppNotification {
   read: boolean;
   kind: "stock" | "payment" | "backup" | "printer" | "bill";
 }
+
+export interface BusinessSettings {
+  businessName: string;
+  phone: string;
+  address: string;
+  gstNumber: string;
+  invoiceFooter: string;
+  logo: string;
+  gstEnabledDefault: boolean;
+  defaultPayment: PaymentMethod;
+  invoicePrefix: string;
+  invoiceNumber: number;
+  decimals: number;
+}
+
+export interface PrinterSettings {
+  thermalConnected: boolean;
+  a4Connected: boolean;
+  autoPrint: boolean;
+  thermalName: string;
+  a4Name: string;
+  paperWidth: string;
+  copies: number;
+}
+
+export interface SearchResult {
+  id: string;
+  label: string;
+  sub: string;
+  kind: "item" | "customer" | "bill";
+}

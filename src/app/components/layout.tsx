@@ -5,7 +5,7 @@ import {
   Search, Bell, Sun, Moon, LogOut, Menu, X, Globe, ChevronLeft, ChevronRight, Zap,
   Wifi, WifiOff,
 } from "lucide-react";
-import type { Screen, Lang, AppNotification } from "../types";
+import type { Screen, Lang, AppNotification, SearchResult } from "../types";
 
 export const NAV_ITEMS: { id: Screen; icon: any; labelKey: string }[] = [
   { id: "dashboard", icon: LayoutDashboard, labelKey: "dashboard" },
@@ -217,8 +217,8 @@ export function MobileMenuSheet({ open, onClose, screen, navigate, lang, setLang
   );
 }
 
-export function NotificationsPanel({ open, onClose, notifications, lang, markAllRead, t }: {
-  open: boolean; onClose: () => void; notifications: AppNotification[]; lang: Lang; markAllRead: () => void; t: (k: string) => string;
+export function NotificationsPanel({ open, onClose, notifications, lang, markAllRead, markOneRead, t }: {
+  open: boolean; onClose: () => void; notifications: AppNotification[]; lang: Lang; markAllRead: () => void; markOneRead: (id: string) => void; t: (k: string) => string;
 }) {
   if (!open) return null;
   return (
@@ -231,13 +231,13 @@ export function NotificationsPanel({ open, onClose, notifications, lang, markAll
         <button onClick={markAllRead} className="text-xs font-semibold px-5 py-2" style={{ color: "var(--primary)" }}>{t("markAllRead")}</button>
         <div className="flex flex-col gap-2 px-4 pb-6">
           {notifications.map(n => (
-            <div key={n.id} className="p-3.5 rounded-2xl border flex gap-3" style={{ borderColor: "var(--border)", background: n.read ? "transparent" : "var(--secondary)" }}>
+            <button key={n.id} onClick={() => markOneRead(n.id)} className="p-3.5 rounded-2xl border flex gap-3 text-left" style={{ borderColor: "var(--border)", background: n.read ? "transparent" : "var(--secondary)" }}>
               <div className="w-2 h-2 rounded-full mt-1.5 flex-shrink-0" style={{ background: n.read ? "transparent" : "var(--primary)" }} />
               <div className="min-w-0">
                 <p className="text-sm font-medium leading-snug">{lang === "ta" ? n.titleTa : n.titleEn}</p>
                 <p className="text-[11px] mt-1" style={{ color: "var(--muted-foreground)", fontFamily: "'JetBrains Mono', monospace" }}>{n.time}</p>
               </div>
-            </div>
+            </button>
           ))}
         </div>
       </div>
@@ -245,9 +245,9 @@ export function NotificationsPanel({ open, onClose, notifications, lang, markAll
   );
 }
 
-export function SearchModal({ open, onClose, query, setQuery, results, t }: {
+export function SearchModal({ open, onClose, query, setQuery, results, onSelect, t }: {
   open: boolean; onClose: () => void; query: string; setQuery: (v: string) => void;
-  results: { label: string; sub: string; kind: string }[]; t: (k: string) => string;
+  results: SearchResult[]; onSelect: (r: SearchResult) => void; t: (k: string) => string;
 }) {
   if (!open) return null;
   return (
@@ -261,13 +261,13 @@ export function SearchModal({ open, onClose, query, setQuery, results, t }: {
         <div className="max-h-80 overflow-y-auto p-2">
           {results.length === 0 && <p className="text-center text-xs py-8" style={{ color: "var(--muted-foreground)" }}>{query ? "No results" : "Type to search items, bills or customers"}</p>}
           {results.map((r, i) => (
-            <div key={i} className="flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-[var(--muted)] cursor-pointer">
+            <button key={i} onClick={() => onSelect(r)} className="w-full flex items-center justify-between px-3 py-2.5 rounded-xl hover:bg-[var(--muted)] cursor-pointer text-left">
               <div>
                 <p className="text-sm font-semibold">{r.label}</p>
                 <p className="text-xs" style={{ color: "var(--muted-foreground)" }}>{r.sub}</p>
               </div>
               <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full" style={{ background: "var(--muted)", color: "var(--muted-foreground)" }}>{r.kind}</span>
-            </div>
+            </button>
           ))}
         </div>
       </div>

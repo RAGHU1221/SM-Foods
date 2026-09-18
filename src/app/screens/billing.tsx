@@ -4,7 +4,7 @@ import {
   MessageCircle, PauseCircle, Eraser, Check, Store, PlayCircle, Eye, UserPlus,
 } from "lucide-react";
 import { GlassCard, PrimaryButton, Badge, TextInput, SelectInput, EmptyState, ConfirmDialog, ProductThumb } from "../components/shared";
-import { PRODUCTS, ITEM_TYPES, CUSTOMERS, fmt, genId } from "../data";
+import { ITEM_TYPES, CUSTOMERS, fmt, genId } from "../data";
 import type { Screen, Lang, CartItem, Product, PaymentMethod, Bill, HeldBill } from "../types";
 
 // ── Shared bill math ──────────────────────────────────────────────────────
@@ -20,6 +20,7 @@ interface BillingCtxProps {
   navigate: (s: Screen) => void; t: (k: string) => string; lang: Lang;
   onSaveBill: (bill: Bill, print?: "thermal" | "a4" | "whatsapp") => void;
   heldBills: HeldBill[]; setHeldBills: (h: HeldBill[]) => void;
+  products: Product[];
 }
 
 function useCartHelpers(cart: CartItem[], setCart: (c: CartItem[]) => void) {
@@ -41,7 +42,7 @@ function useCartHelpers(cart: CartItem[], setCart: (c: CartItem[]) => void) {
 }
 
 // ── POS Billing Screen ─────────────────────────────────────────────────────
-export function BillingScreen({ cart, setCart, navigate, t, lang, onSaveBill, heldBills, setHeldBills }: BillingCtxProps) {
+export function BillingScreen({ cart, setCart, navigate, t, lang, onSaveBill, heldBills, setHeldBills, products }: BillingCtxProps) {
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("All");
   const [discount, setDiscount] = useState(0);
@@ -55,7 +56,7 @@ export function BillingScreen({ cart, setCart, navigate, t, lang, onSaveBill, he
 
   const { addToCart, removeFromCart, deleteFromCart, setQty } = useCartHelpers(cart, setCart);
 
-  const filtered = PRODUCTS.filter(p =>
+  const filtered = products.filter(p =>
     (typeFilter === "All" || p.typeId === typeFilter) &&
     ((lang === "ta" ? p.nameTa : p.nameEn).toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase()) || p.barcode.includes(search))
   );
@@ -288,7 +289,7 @@ function PaymentModal({ total, received, setReceived, payMethod, setPayMethod, o
 }
 
 // ── Wholesale Billing Screen ────────────────────────────────────────────────
-export function WholesaleBillingScreen({ cart, setCart, navigate, t, lang, onSaveBill }: BillingCtxProps) {
+export function WholesaleBillingScreen({ cart, setCart, navigate, t, lang, onSaveBill, products }: BillingCtxProps) {
   const [search, setSearch] = useState("");
   const [gstEnabled, setGstEnabled] = useState(false);
   const [discount, setDiscount] = useState(0);
@@ -296,7 +297,7 @@ export function WholesaleBillingScreen({ cart, setCart, navigate, t, lang, onSav
   const [received, setReceived] = useState<number | "">("");
 
   const { addToCart, deleteFromCart, setRate, setQty } = useCartHelpers(cart, setCart);
-  const filtered = PRODUCTS.filter(p => (lang === "ta" ? p.nameTa : p.nameEn).toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase()));
+  const filtered = products.filter(p => (lang === "ta" ? p.nameTa : p.nameEn).toLowerCase().includes(search.toLowerCase()) || p.sku.toLowerCase().includes(search.toLowerCase()));
   const { subtotal, gstAmt, total } = computeTotals(cart, discount, gstEnabled);
   const receivedNum = received === "" ? total : Number(received);
   const balance = total - receivedNum;

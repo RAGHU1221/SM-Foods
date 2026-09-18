@@ -7,11 +7,11 @@ import {
   TrendingUp, AlertTriangle, ChevronRight,
 } from "lucide-react";
 import { GlassCard, StatCard, SectionHeader, Badge, ResponsiveTable } from "../components/shared";
-import { DAILY_SALES, MONTHLY_SALES, PAYMENT_SPLIT, TOP_ITEMS, PRODUCTS, fmt, fmtK } from "../data";
-import type { Screen, Lang, Bill } from "../types";
+import { DAILY_SALES, MONTHLY_SALES, PAYMENT_SPLIT, TOP_ITEMS, fmt, fmtK } from "../data";
+import type { Screen, Lang, Bill, Product } from "../types";
 
-export function DashboardScreen({ dark, navigate, t, lang, bills }: { dark: boolean; navigate: (s: Screen) => void; t: (k: string) => string; lang: Lang; bills: Bill[] }) {
-  const lowStock = PRODUCTS.filter(p => p.stock <= p.minStock);
+export function DashboardScreen({ dark, navigate, t, lang, bills, products }: { dark: boolean; navigate: (s: Screen) => void; t: (k: string) => string; lang: Lang; bills: Bill[]; products: Product[] }) {
+  const lowStock = products.filter(p => p.stock <= p.minStock);
   const todaySales = DAILY_SALES[DAILY_SALES.length - 1].revenue;
   const todayBills = DAILY_SALES[DAILY_SALES.length - 1].bills;
 
@@ -38,7 +38,7 @@ export function DashboardScreen({ dark, navigate, t, lang, bills }: { dark: bool
         <StatCard label={t("cashReceived")} value={fmtK(todaySales * 0.38)} icon={Banknote} color="#0f766e" />
         <StatCard label={t("upiReceived")} value={fmtK(todaySales * 0.34)} icon={Smartphone} color="#0369a1" />
         <StatCard label={t("outstanding")} value={fmtK(116250)} change={-4.1} icon={Wallet} color="var(--destructive)" />
-        <StatCard label={t("totalItems")} value={String(PRODUCTS.length)} icon={Package} color="#7c3aed" />
+        <StatCard label={t("totalItems")} value={String(products.length)} icon={Package} color="#7c3aed" />
       </div>
 
       {/* Charts row */}

@@ -42,7 +42,7 @@ export function SplashScreen({ onDone, t }: { onDone: () => void; t: (k: string)
   );
 }
 
-export function LoginScreen({ onLogin, t }: { onLogin: () => void; t: (k: string) => string }) {
+export function LoginScreen({ onLogin, t, lang }: { onLogin: () => void; t: (k: string) => string; lang?: Lang }) {
   const [user, setUser] = useState("admin");
   const [pass, setPass] = useState("smfoods@123");
   const [showPass, setShowPass] = useState(false);
@@ -87,7 +87,12 @@ export function LoginScreen({ onLogin, t }: { onLogin: () => void; t: (k: string
             <label className="flex items-center gap-2" style={{ color: "var(--muted-foreground)" }}>
               <input type="checkbox" checked={remember} onChange={e => setRemember(e.target.checked)} /> {t("rememberMe")}
             </label>
-            <button className="font-semibold" style={{ color: "var(--primary)" }}>{t("forgotPassword")}</button>
+            <button
+              type="button"
+              onClick={() => alert(lang === "ta" ? "இந்த டெமோ பயன்பாட்டில் கடவுச்சொல் மீட்பு இல்லை. Demo: admin / smfoods@123" : "Password reset isn't available in this demo. Use admin / smfoods@123.")}
+              className="font-semibold"
+              style={{ color: "var(--primary)" }}
+            >{t("forgotPassword")}</button>
           </div>
           <button
             onClick={handleLogin}
