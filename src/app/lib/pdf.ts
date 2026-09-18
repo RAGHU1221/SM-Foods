@@ -26,11 +26,104 @@ export type BillPdfFormat = "thermal" | "a4";
 
 const THERMAL_WIDTH_MM = 80; // standard 80mm thermal roll
 
+// html2canvas 1.4.1 (the version this app uses) predates the CSS Color 4/5
+// functions Tailwind v4 generates by default — every default palette color
+// (text-red-500, text-emerald-500, ...) is defined as oklch(), and every
+// "/opacity" utility (bg-primary/20, border-border/50, ...) gets a
+// color-mix() variant for browsers that support it. getComputedStyle
+// reports these back to JS in their literal oklch()/color-mix() form (this
+// is real Chrome behaviour, not a test-only quirk), and html2canvas throws
+// "Attempting to parse an unsupported color function" the moment it meets
+// either one — e.g. the Customer Ledger's credit/debit amounts use
+// text-emerald-500/text-red-500, which is exactly what broke Print/PDF/
+// Share there in production. Fix: before html2canvas rasterizes the cloned
+// DOM, walk it and replace any computed color value that uses one of these
+// functions with a plain rgb()/rgba(). The 2D canvas context's fillStyle parser DOES
+// understand oklch/color-mix (it just re-serializes back to oklch/oklab,
+// which doesn't help) — so instead we paint a 1x1 pixel with that color and
+// read the raw RGBA bytes back with getImageData, which always comes back
+// as plain sRGB numbers html2canvas's own color parser can read directly.
+const MODERN_COLOR_FN = /(oklch|oklab|lab|lch|color-mix)\(/i;
+let sanitizeCtx: CanvasRenderingContext2D | null = null;
+
+function resolveColorViaCanvas(cssColor: string): string {
+  try {
+    if (!sanitizeCtx) {
+      const c = document.createElement("canvas");
+      c.width = 1;
+      c.height = 1;
+      sanitizeCtx = c.getContext("2d", { willReadFrequently: true });
+    }
+    if (!sanitizeCtx) return cssColor;
+    sanitizeCtx.clearRect(0, 0, 1, 1);
+    sanitizeCtx.fillStyle = "#000000"; // reset so a failed parse falls back to black, not a stale color
+    sanitizeCtx.fillStyle = cssColor;
+    sanitizeCtx.fillRect(0, 0, 1, 1);
+    const [r, g, b, a] = sanitizeCtx.getImageData(0, 0, 1, 1).data;
+    return a === 255 ? `rgb(${r}, ${g}, ${b})` : `rgba(${r}, ${g}, ${b}, ${(a / 255).toFixed(3)})`;
+  } catch {
+    return "rgb(0, 0, 0)";
+  }
+}
+
+// Replaces every oklch()/oklab()/lab()/lch()/color-mix() call inside a CSS
+// value (handles nested calls like color-mix(in oklab, oklch(...) 50%, ...)
+// via a balanced-paren scan, since those are valid and common) with its
+// resolved rgb() equivalent. Values with none of these functions are
+// returned untouched.
+function sanitizeColorFunctions(value: string): string {
+  if (!value || !MODERN_COLOR_FN.test(value)) return value;
+  let result = "";
+  let i = 0;
+  while (i < value.length) {
+    const rest = value.slice(i);
+    const match = MODERN_COLOR_FN.exec(rest);
+    if (!match || match.index === undefined) { result += rest; break; }
+    const start = i + match.index;
+    result += value.slice(i, start);
+    const openParenIdx = start + match[0].length - 1;
+    let depth = 1;
+    let j = openParenIdx + 1;
+    while (j < value.length && depth > 0) {
+      if (value[j] === "(") depth++;
+      else if (value[j] === ")") depth--;
+      j++;
+    }
+    result += resolveColorViaCanvas(value.slice(start, j));
+    i = j;
+  }
+  return result;
+}
+
+const COLOR_PROPS = [
+  "color", "backgroundColor",
+  "borderTopColor", "borderRightColor", "borderBottomColor", "borderLeftColor",
+  "outlineColor", "textDecorationColor", "boxShadow",
+] as const;
+
+function sanitizeClonedColors(root: HTMLElement) {
+  const all: HTMLElement[] = [root, ...Array.from(root.querySelectorAll<HTMLElement>("*"))];
+  for (const el of all) {
+    const computed = window.getComputedStyle(el);
+    for (const prop of COLOR_PROPS) {
+      const raw = computed[prop as keyof CSSStyleDeclaration] as unknown as string;
+      if (typeof raw === "string" && MODERN_COLOR_FN.test(raw)) {
+        el.style.setProperty(
+          prop.replace(/[A-Z]/g, m => "-" + m.toLowerCase()),
+          sanitizeColorFunctions(raw),
+          "important"
+        );
+      }
+    }
+  }
+}
+
 async function elementToPdfBlob(el: HTMLElement, format: BillPdfFormat): Promise<Blob> {
   const canvas = await html2canvas(el, {
     scale: 2,
     useCORS: true,
     backgroundColor: "#ffffff",
+    onclone: (_doc, clonedEl) => sanitizeClonedColors(clonedEl),
   });
   const imgData = canvas.toDataURL("image/png");
 
@@ -137,9 +230,21 @@ export async function shareBillPdf(blob: Blob, filename: string, text?: string):
 
   const file = new File([blob], filename, { type: "application/pdf" });
   const nav = navigator as Navigator & { canShare?: (data?: { files?: File[] }) => boolean; share?: (data: unknown) => Promise<void> };
-  if (nav.canShare && nav.canShare({ files: [file] }) && nav.share) {
-    await nav.share({ files: [file], title: filename, text });
-    return;
+  try {
+    if (nav.canShare && nav.canShare({ files: [file] }) && nav.share) {
+      await nav.share({ files: [file], title: filename, text });
+      return;
+    }
+  } catch (err) {
+    // Web Share can throw for reasons that aren't real failures — the user
+    // cancelled the share sheet, or the browser's "transient activation"
+    // window (needed to call navigator.share) expired while html2canvas was
+    // still rendering the PDF. Either way the right recovery is the same
+    // fallback a browser with no Share API gets: a plain download, not an
+    // error the user has to dismiss.
+    const name = (err as { name?: string })?.name;
+    if (name === "AbortError") return; // user cancelled the share sheet — not an error
+    console.warn("navigator.share failed, falling back to download:", err);
   }
   downloadBlobInBrowser(blob, filename);
 }
